@@ -3,6 +3,9 @@
     android:id="@+id/txtItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:textSize="18dp"
+    android:minHeight="?android:attr/listPreferredItemHeight"
+    android:gravity="center_vertical"
     >
 
 </TextView>

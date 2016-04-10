@@ -1,4 +1,4 @@
-package edu.uw.listdatademo;
+package edu.uw.fragmentdemo;
 
 import org.junit.Test;
 

@@ -1,6 +1,10 @@
-package edu.uw.listdatademo;
+package edu.uw.fragmentdemo;
 
 import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,18 +14,21 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 
 /**
  * A class for downloading movie data from the internet.
  * Code adapted from Google.
  *
  * @author Joel Ross
+ * @version 2 (ArrayList-based)
  */
 public class MovieDownloader {
 
     private static final String TAG = "MovieDownloader";
 
-    public static String[] downloadMovieData(String movie) {
+    //Returns ArrayList of Movies, rather than String[]
+    public static ArrayList<Movie> downloadMovieData(String movie) {
 
         //construct the url for the omdbapi API
         String urlString = "";
@@ -34,7 +41,7 @@ public class MovieDownloader {
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
 
-        String movies[] = null;
+        ArrayList<Movie> movies = null;
 
         try {
 
@@ -61,13 +68,10 @@ public class MovieDownloader {
                 return null;
             }
             String results = buffer.toString();
-            results = results.replace("{\"Search\":[","");
-            results = results.replace("]}","");
-            results = results.replace("},", "},\n");
 
-            Log.v(TAG, results); //for debugging purposes
+            movies = parseMovieJSONData(results);
 
-            movies = results.split("\n");
+            Log.v(TAG, movies.toString()); //for debugging purposes
         }
         catch (IOException e) {
             return null;
@@ -83,6 +87,32 @@ public class MovieDownloader {
                 catch (IOException e) {
                 }
             }
+        }
+
+        return movies;
+    }
+
+    /**
+     * Parses a JSON-format String (from OMDB search results) into a list of Movie objects
+     */
+    public static ArrayList<Movie> parseMovieJSONData(String json){
+        ArrayList<Movie> movies = new ArrayList<Movie>();
+
+        try {
+            JSONArray moviesJsonArray = new JSONObject(json).getJSONArray("Search"); //get array from "search" key
+            for(int i=0; i<moviesJsonArray.length(); i++){
+                JSONObject movieJsonObject = moviesJsonArray.getJSONObject(i); //get ith object from array
+                Movie movie = new Movie();
+                movie.title = movieJsonObject.getString("Title"); //get title from object
+                movie.year = Integer.parseInt(movieJsonObject.getString("Year")); //get year from object
+                movie.imdbId = movieJsonObject.getString("imdbID"); //get imdb from object
+                movie.posterUrl = movieJsonObject.getString("Poster"); //get poster from object
+
+                movies.add(movie);
+            }
+        } catch (JSONException e) {
+            Log.e(TAG, "Error parsing json", e);
+            return null;
         }
 
         return movies;
