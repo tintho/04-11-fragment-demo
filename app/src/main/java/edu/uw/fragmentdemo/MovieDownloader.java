@@ -70,6 +70,8 @@ public class MovieDownloader {
             String results = buffer.toString();
 
             movies = parseMovieJSONData(results);
+            if(movies == null)
+                movies = new ArrayList<Movie>();
 
             Log.v(TAG, movies.toString()); //for debugging purposes
         }

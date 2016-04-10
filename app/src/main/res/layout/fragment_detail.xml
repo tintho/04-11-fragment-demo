@@ -16,7 +16,7 @@
         android:id="@+id/txtMovieIMDB"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="http://www.imdb.com/"
+        android:text="http://www.imdb.com/title/"
         android:textSize="18dp"
         android:autoLink="web"
         android:clickable="true"
