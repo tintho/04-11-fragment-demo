@@ -2,6 +2,8 @@ package edu.uw.fragmentdemo;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -12,63 +14,23 @@ import android.widget.ListView;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MoviesFragment.onMovieSelectedListener{
 
     private static final String TAG = "MainActivity";
 
-    private ArrayAdapter<Movie> adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-        //controller
-        adapter = new ArrayAdapter<Movie>(this,
-            R.layout.list_item, R.id.txtItem, new ArrayList<Movie>());
-
-        ListView listView = (ListView)findViewById(R.id.listView);
-        listView.setAdapter(adapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Movie movie = (Movie)parent.getItemAtPosition(position);
-                Log.v(TAG, "You clicked on: "+movie);
-
-            }
-        });
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.add(R.id.container, new MoviesFragment(), "MoviesFragment");
+        ft.commit();
 
     }
 
-    //helper method for downloading the data via the MovieDowloadTask
-    public void fetchData(String searchTerm){
-        Log.v(TAG, "You searched for: "+searchTerm);
-        MovieDownloadTask task = new MovieDownloadTask();
-        task.execute(searchTerm);
-    }
 
-    //A task to download movie data from the internet on a background thread
-    public class MovieDownloadTask extends AsyncTask<String, Void, ArrayList<Movie>> {
-
-        @Override
-        protected ArrayList<Movie> doInBackground(String... params) {
-
-            ArrayList<Movie> data = MovieDownloader.downloadMovieData(params[0]);
-
-            return data;
-        }
-
-        @Override
-        protected void onPostExecute(ArrayList<Movie> movies) {
-            super.onPostExecute(movies);
-
-            adapter.clear();
-            for(Movie movie : movies){
-                adapter.add(movie);
-            }
-        }
-    }
 
     //respond to search button clicking
     public void handleSearchClick(View v){
@@ -77,7 +39,31 @@ public class MainActivity extends AppCompatActivity {
         EditText text = (EditText)findViewById(R.id.txtSearch);
         String searchTerm = text.getText().toString();
 
-        fetchData(searchTerm);
+        MoviesFragment fragment = (MoviesFragment) getSupportFragmentManager().findFragmentByTag("MoviesFragment");
+
+        if(fragment == null) {
+            fragment = new MoviesFragment();
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.container, fragment, null)
+                    .commit();
+        }
+
+        fragment.fetchData(searchTerm);
     }
 
+    @Override
+    public void movieSelected(Movie movie) {
+
+        Bundle bundle = new Bundle();
+        bundle.putString("title", movie.toString());
+        bundle.putString("imdb", movie.imdbId);
+
+        DetailsFragment detailFragment = new DetailsFragment();
+        detailFragment.setArguments(bundle);
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.container, detailFragment, null)
+                .addToBackStack(null)
+                .commit();
+    }
 }
